@@ -3,8 +3,28 @@ package Thread::Needs;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 use strict;
+
+# Do this at compilation time only
+#  If Symbol.pm got already loaded, we're going to keep it
+#   But make sure we can zap modules directly
+#  Else
+#   Get the Symbol stuff
+#   Make sure we can zap modules directly
+#   And zap the original module, our zap() should survive that.
+#   Make sure it gets loaded again if needed
+
+BEGIN {
+    if (defined $Symbol::VERSION) {
+        *zap = \&Symbol::delete_package;
+    } else {
+        require Symbol;
+        *zap = \&Symbol::delete_package;
+        zap( 'Symbol' );
+        delete( $INC{'Symbol.pm'} );
+    }
+} #BEGIN
 
 # Initialize the VERBOSE flag
 
@@ -19,6 +39,8 @@ our %keep;
 
 BEGIN {
     foreach (qw(
+AutoLoader
+DynaLoader
 Thread::Needs
 threads
 threads::shared
@@ -112,8 +134,7 @@ sub CLONE {
 #  Reloop if we need to keep this one
 #  Remove knowledge of it being loaded
 #  Remove perl module extension
-#  Delete the stash of that module
-#  But make sure there is an empty CLONE there
+#  Delete that module
 
     foreach (@module) {
         next if m#^/#; # absolute path in %INC?
@@ -121,19 +142,10 @@ warn "Deleting $_ from %INC\n" if $VERBOSE;
         delete( $INC{$_} );
         s#\.pm$##;
 	s#/#::#g;
-warn "Undeffing stash \%$_\::\n" if $VERBOSE;
-        undef( %{$_.'::'} );
-        *{$_.'::CLONE'} = \&_stub; # need to leave stub for other CLONE's
+warn "Removing $_\n" if $VERBOSE;
+        zap( $_ );
     }
 } # CLONE
-
-#---------------------------------------------------------------------------
-
-# internal subroutines
-
-#---------------------------------------------------------------------------
-
-sub _stub {} #_stub
 
 #---------------------------------------------------------------------------
 

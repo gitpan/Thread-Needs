@@ -1,3 +1,8 @@
+0.04	25 August 2003
+	Found Symbol::delete_package for zapping modules from memory.  Seems
+	to be much more reliable than my own little method.  Now uses that
+	and zaps Symbol from memory if it wasn't loaded already.
+
 0.03	13 August 2003
 	Cleaned up Makefile.PL and updated the copyright info.  Made sure
 	the test-suite runs under strict and warnings.  Added a message
