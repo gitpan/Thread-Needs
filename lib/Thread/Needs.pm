@@ -3,7 +3,7 @@ package Thread::Needs;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-our $VERSION : unique = '0.01';
+our $VERSION : unique = '0.02';
 use strict;
 
 # Initialize the VERBOSE flag
@@ -43,21 +43,34 @@ threads::shared
 #---------------------------------------------------------------------------
 #  IN: 1 class for which to import (ignored)
 #      2..N modules that should be kept
+# OUT: 1..N modules that where not kept before
 
 sub import {
 
-# Obtain the class (we don't want to remove that!)
+# Obtain the class (we don't want to keep that!)
+# Initialize the list of modules that were not already being kept
+
+    my $class = shift;
+    my @notyet;
+
 # For all of the parameters
 #  Postfix .pm if not already specified
 #  Make it a filename instead of a module
+#  Reloop if this module is already being kept
+#  Add this module to list of not already kept
 #  Mark this module to be kept
 
-    my $class = shift;
     foreach (@_) {
         my $file = m#\.pm$# ? $_ : "$_.pm";
         $file =~ s#::#/#g;
-	$keep{$file} = undef;
+        next if exists( $keep{$file} );
+        push( @notyet,$_ );
+        $keep{$file} = undef;
     }
+
+# Return the modules that were not yet being kept
+
+    @notyet;
 } #import
 
 #---------------------------------------------------------------------------
@@ -78,6 +91,10 @@ sub unimport {
         $file =~ s#::#/#g;
 	delete( $keep{$file} );
     }
+
+# Make sure we return an empty list
+
+    ();
 } #unimport
 
 #---------------------------------------------------------------------------
@@ -143,8 +160,8 @@ Thread::Needs - remove unneeded modules from CLONEd memory
 
                   *************************
 
-In many threaded applications, many threads do only very simple things that
-do not need many (if any) modules.  The current threading module however,
+In many threaded applications, threads do only very simple things that
+do not need many (if any) modules.  The current threading model however,
 copies all modules that are available at the moment a thread is started,
 to the memory of the thread (ensuring an identical environment to the thread
 from which it was started).  Memory that is not being used and which is
@@ -183,7 +200,8 @@ implicitely.
 =head2 import
 
  use Thread::Needs qw(Must::Keep::This::Module);
- Thread::Needs->import( qw(Must::Keep::This::Module) );
+
+ @notyet = Thread::Needs->import( qw(Must::Keep::This::Module) );
 
 With the "import" class method you can specify additional modules that must
 L<not> be removed in any threads that are started from the current thread.
@@ -191,9 +209,24 @@ L<not> be removed in any threads that are started from the current thread.
 The "import" method is called implicitely when parameters are specified with
 C<use>.
 
+If you call the "import" method explicitely, then the modules that were
+not already marked to be saved, will be returned.  This allows a module to
+mark modules to be kept, start threads, and then unmark the modules to be
+kept using the L<unimport> class method.
+
+You should also note that you can call the C<import()> method of a module
+B<without> having to be sure whether the module is actually loaded.
+If the "import" method is called without the Thread::Needs module being
+available, it will execute the UNIVERSAL->import method, effectively turning
+it into a no-op.  So modules can easily call the Thread::Needs->import
+without having to worry about Thread::Needs being available: if is B<is>
+available, then you will get the memory savings.  If it is not available,
+then you will not get the memory savings, but it won't break either.
+
 =head2 unimport
 
  no Thread::Needs qw(Must::Not::Keep::This::Module);
+
  Thread::Needs->unimport( qw(Must::Not::Keep::This::Module) );
 
 With the "unimport" class method you can specify modules that must be removed
@@ -204,7 +237,11 @@ L<import>.
 The "unimport" method is called implicitely when parameters are specified
 with C<no>.
 
-=head1 EXAMPLE
+=head1 EXAMPLES
+
+Some examples of using Thread::Needs.
+
+=head2 using Thread::Pool
 
 A simple example when using Thread::Pool:
 
@@ -225,6 +262,27 @@ A simple example when using Thread::Pool:
 With the C<Thread::Needs> the memory usage of the above is B<7928> KByte.
 Without it, the memory usage is B<9104> KByte.  That's over 1 Mbyte of
 memory saved, about 12%.  Well, at least on my (Linux) development machine.
+
+=head2 within Thread::Pool
+
+Because the Thread::Pool module internally "knows" it will always need the
+L<Thread::Pool> and L<Thread::Conveyor> modules, it can tell Thread::Needs
+itself that the Thread::Pool and Thread::Conveyor modules need to be kept.
+However, that would mean that any other threads would also keep these modules,
+which may not be what you want.
+
+The solution is simple: L<import> returns the modules that were not yet
+marked to be saved, so you can later call the L<unimport> module after the
+threads have been started.
+
+ my @notyet = Thread::Needs->import( qw(Thread::Pool Thread::Conveyor) );
+ $thread = threads->new( \&start_thread );
+ Thread::Needs->unimport( @notyet );
+
+Please note that the module itself does B<not> have to do a
+C<use Thread::Needs>.  Because any class inherits from UNIVERSAL.pm, the
+absence of Thread::Needs will cause the calls to "import" and "unimport"
+to effectively become no-ops.
 
 =head1 CAVEATS
 
