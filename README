@@ -1,4 +1,4 @@
-README for Thread::Deadlock
+README for Thread::Needs
 
 Removes unneeded modules from CLONEd memory, thus creating a smaller memory
 footprint for threaded Perl applications.

@@ -1,3 +1,8 @@
+0.03	13 August 2003
+	Cleaned up Makefile.PL and updated the copyright info.  Made sure
+	the test-suite runs under strict and warnings.  Added a message
+	about warnings that may occur from AutoLoader.
+
 0.02	29 July 2002
 	Added an actual test-suite.
 

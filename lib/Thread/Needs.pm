@@ -3,7 +3,7 @@ package Thread::Needs;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-our $VERSION : unique = '0.02';
+$VERSION = '0.03';
 use strict;
 
 # Initialize the VERBOSE flag
@@ -102,7 +102,7 @@ sub unimport {
 sub CLONE {
 
 # Obtain the sorted list of modules that we need to remove
-# Allow for avery dirt trick in the book
+# Allow for every dirty trick in the book
 
     my @module =
      sort {lc($a) cmp lc($b)} map {exists $keep{$_} ? () : ($_)} keys %INC;
@@ -301,7 +301,7 @@ Please report bugs to <perlbugs@dijkmat.nl>.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 2002-2003 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

@@ -6,3 +6,4 @@ VERSION
 Makefile.PL
 lib/Thread/Needs.pm
 t/Needs.t
+META.yml                                Module meta-data (added by MakeMaker)
