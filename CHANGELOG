@@ -1,3 +1,6 @@
+0.05	28 December 2003
+	Added automatic required modules update using Devel::Required.
+
 0.04	25 August 2003
 	Found Symbol::delete_package for zapping modules from memory.  Seems
 	to be much more reliable than my own little method.  Now uses that

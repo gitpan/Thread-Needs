@@ -3,7 +3,7 @@ package Thread::Needs;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 use strict;
 
 # Do this at compilation time only
@@ -248,6 +248,10 @@ L<import>.
 
 The "unimport" method is called implicitely when parameters are specified
 with C<no>.
+
+=head1 REQUIRED MODULES
+
+ (none)
 
 =head1 EXAMPLES
 
