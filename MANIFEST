@@ -1,0 +1,8 @@
+MANIFEST
+CHANGELOG
+README
+TODO
+VERSION
+Makefile.PL
+lib/Thread/Needs.pm
+t/Needs.t
